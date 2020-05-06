@@ -1,0 +1,4 @@
+D:\JetBrains\apps\CLion\ch-0\201.7223.86\bin\cmake\win\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" D:\Icould\C++\HDmap
+-- Configuring done
+-- Generating done
+-- Build files have been written to: D:/Icould/C++/HDmap/cmake-build-debug
