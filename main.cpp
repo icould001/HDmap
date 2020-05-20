@@ -6,9 +6,15 @@
 #include <sstream>
 #include <pthread.h>
 #include <semaphore.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "route.h"
 #include "dataLoad.h"
 #include "dijkstra.h"
+
+#define FILE_NAME "output.txt"
 
 sem_t sem;
 
@@ -18,7 +24,7 @@ typedef struct args
     object& o2;
     std::map<object, std::vector<std::pair<object, route>>> map;
     std::string expl_str;
-    std::ostream& out;
+    int& out;
 } args;
 
 object findObject(int x1, int y1, std::map<object, std::vector<std::pair<object, route>>> map);
@@ -31,6 +37,11 @@ void printPath(const args* a, const std::pair<double, std::map<object, object>>&
 
 int main()
 {
+    int fd = open(FILE_NAME,O_CREAT|O_WRONLY,0777);
+    if(fd<0){
+        perror("Error opening output file.");
+        exit(1);
+    }
     load_data();
     //printTest(highwayOnlyMap);
     int x1, x2, y1, y2;
@@ -46,15 +57,17 @@ int main()
     object o2 = findObject(x2, y2, wholeMap);
     //std::cout<<o1<<std::endl;
     //std::cout<<o2<<std::endl;
+
+
     sem_init(&sem, 0, 1);
     pthread_t wmT, ntT, mcT, hoT;
-    args a1 = {o1, o2, wholeMap, "the whole map", std::cout};
+    args a1 = {o1, o2, wholeMap, "the whole map", fd};
     pthread_create(&wmT, nullptr, doAlgorithm1, (void*) &a1);
-    args a2 = {o1, o2, noTolSystemMap, "the map without tol systems", std::cout};
+    args a2 = {o1, o2, noTolSystemMap, "the map without tol systems", fd};
     pthread_create(&ntT, nullptr, doAlgorithm1, (void*) &a2);
-    args a3 = {o1, o2, highwayOnlyMap, "the map with highways only", std::cout};
+    args a3 = {o1, o2, highwayOnlyMap, "the map with highways only", fd};
     pthread_create(&hoT, nullptr, doAlgorithm1, (void*) &a3);
-    args a4 = {o1, o2, wholeMap, "map with minimal crossroads", std::cout};
+    args a4 = {o1, o2, wholeMap, "map with minimal crossroads", fd};
     pthread_create(&mcT, nullptr, doAlgorithm2, (void*) &a4);
 
     pthread_join(wmT, nullptr);
@@ -62,7 +75,7 @@ int main()
     pthread_join(mcT, nullptr);
 
     sem_destroy(&sem);
-
+    close(fd);
     return 0;
 }
 
@@ -84,10 +97,10 @@ void* doAlgorithm2(void* arg)
 
 void printPath(const args* a, const std::pair<double, std::map<object, object>>& path, std::string min_searched_thing)
 {
+    std::stringstream out;
     if(path.first != std::numeric_limits<double>::max())
     {
         std::stack<std::string> directions;
-
         for(auto current = a->o2; current != a->o1; current = path.second.at(current))
         {
             std::stringstream s;
@@ -96,23 +109,25 @@ void printPath(const args* a, const std::pair<double, std::map<object, object>>&
 
             directions.push(s.str());
         }
-        sem_wait(&sem);
-        a->out << std::endl << "Path in " << a->expl_str << std::endl;
+
+        out << std::endl << "Path in " << a->expl_str << std::endl;
         for(auto top = directions.top(); !directions.empty(); directions.pop(), top = !directions.empty() ?
                                                                                       directions.top() :
                                                                                       "")
         {
-            a->out << top << std::endl;
+            out << top << std::endl;
         }
-        a->out << "It will take you " << path.first << min_searched_thing << std::endl;
-        sem_post(&sem);
+        out << "It will take you " << path.first << min_searched_thing << std::endl;
+
     }
     else
     {
-        sem_wait(&sem);
-        a->out << std::endl << "No path was found between " << a->o1 << " and " << a->o2 << " in " << a->expl_str << std::endl;
-        sem_post(&sem);
+        out << std::endl << "No path was found between " << a->o1 << " and " << a->o2 << " in " << a->expl_str << std::endl;
     }
+
+    sem_wait(&sem);
+    write(a->out,out.str().c_str(),out.str().size());
+    sem_post(&sem);
 }
 
 object findObject(int x, int y, std::map<object, std::vector<std::pair<object, route> > > map)

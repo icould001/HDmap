@@ -51,6 +51,14 @@ pthread.h
 -
 semaphore.h
 -
+sys/types.h
+-
+sys/stat.h
+-
+fcntl.h
+-
+unistd.h
+-
 route.h
 D:/Icould/C++/HDmap/route.h
 dataLoad.h
