@@ -22,18 +22,18 @@ typedef struct args
 {
     object& o1;
     object& o2;
-    std::map<object, std::vector<std::pair<object, route>>> map;
+    std::map<object, std::vector<std::pair<object, route>>>& map;
     std::string expl_str;
     int& out;
 } args;
 
-object findObject(int x1, int y1, std::map<object, std::vector<std::pair<object, route>>> map);
+object findObject(int x, int y, std::map<object, std::vector<std::pair<object, route>>>& map);
 
-void* doAlgorithm1(void* arg);
+void* doAlgorithmMinDuration(void* arg);
 
-void* doAlgorithm2(void* arg);
+void* doAlgorithmMnCrossroads(void* arg);
 
-void printPath(const args* a, const std::pair<double, std::map<object, object>>& path, std::string min_searched_thing);
+void printPath(const args* a, const std::pair<double, std::map<object, object>>& path, std::string searched_thing);
 
 int main()
 {
@@ -57,21 +57,28 @@ int main()
     object o2 = findObject(x2, y2, wholeMap);
     //std::cout<<o1<<std::endl;
     //std::cout<<o2<<std::endl;
+    if(o1 == wholeMap.end()->first||o2 == wholeMap.end()->first){
+        perror("Error: invalid coordinates.");
+        exit(2);
+    }
 
-
-    sem_init(&sem, 0, 1);
+    if(sem_init(&sem, 0, 1)<0){
+        perror("Error sem_init.");
+        exit(3);
+    }
     pthread_t wmT, ntT, mcT, hoT;
     args a1 = {o1, o2, wholeMap, "the whole map", fd};
-    pthread_create(&wmT, nullptr, doAlgorithm1, (void*) &a1);
+    pthread_create(&wmT, nullptr, doAlgorithmMinDuration, (void*) &a1);
     args a2 = {o1, o2, noTolSystemMap, "the map without tol systems", fd};
-    pthread_create(&ntT, nullptr, doAlgorithm1, (void*) &a2);
+    pthread_create(&ntT, nullptr, doAlgorithmMinDuration, (void*) &a2);
     args a3 = {o1, o2, highwayOnlyMap, "the map with highways only", fd};
-    pthread_create(&hoT, nullptr, doAlgorithm1, (void*) &a3);
+    pthread_create(&hoT, nullptr, doAlgorithmMinDuration, (void*) &a3);
     args a4 = {o1, o2, wholeMap, "map with minimal crossroads", fd};
-    pthread_create(&mcT, nullptr, doAlgorithm2, (void*) &a4);
+    pthread_create(&mcT, nullptr, doAlgorithmMnCrossroads, (void*) &a4);
 
     pthread_join(wmT, nullptr);
     pthread_join(ntT, nullptr);
+    pthread_join(hoT, nullptr);
     pthread_join(mcT, nullptr);
 
     sem_destroy(&sem);
@@ -79,7 +86,7 @@ int main()
     return 0;
 }
 
-void* doAlgorithm1(void* arg)
+void* doAlgorithmMinDuration(void* arg)
 {
     args* a = static_cast<args*>(arg);
     auto path = dijkstra_min_duration(a->map, a->o1, a->o2);
@@ -87,7 +94,7 @@ void* doAlgorithm1(void* arg)
     return nullptr;
 }
 
-void* doAlgorithm2(void* arg)
+void* doAlgorithmMnCrossroads(void* arg)
 {
     args* a = static_cast<args*>(arg);
     auto path = dijkstra_min_crossroads(a->map, a->o1, a->o2);
@@ -95,7 +102,7 @@ void* doAlgorithm2(void* arg)
     return nullptr;
 }
 
-void printPath(const args* a, const std::pair<double, std::map<object, object>>& path, std::string min_searched_thing)
+void printPath(const args* a, const std::pair<double, std::map<object, object>>& path, std::string searched_thing)
 {
     std::stringstream out;
     if(path.first != std::numeric_limits<double>::max())
@@ -117,7 +124,7 @@ void printPath(const args* a, const std::pair<double, std::map<object, object>>&
         {
             out << top << std::endl;
         }
-        out << "It will take you " << path.first << min_searched_thing << std::endl;
+        out << "It will take you " << path.first << searched_thing << std::endl;
 
     }
     else
@@ -130,7 +137,7 @@ void printPath(const args* a, const std::pair<double, std::map<object, object>>&
     sem_post(&sem);
 }
 
-object findObject(int x, int y, std::map<object, std::vector<std::pair<object, route> > > map)
+object findObject(int x, int y, std::map<object, std::vector<std::pair<object, route> > >& map)
 {
     for(auto& o:map)
     {

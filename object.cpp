@@ -25,13 +25,13 @@ int object::getY() const
 }
 
 enum object_type object::getObjectType() const {
-    return object_type;
+    return type;
 }
 
 std::ostream& operator<<(std::ostream& out, object point)
 {
     std::string str;
-    switch(point.object_type)
+    switch(point.type)
     {
         case object_type::Sign:
             str="Sign";

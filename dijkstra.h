@@ -16,7 +16,7 @@ static std::map<object, std::vector<std::pair<object, route> > > wholeMap;
 static std::map<object, std::vector<std::pair<object, route> > > highwayOnlyMap;
 static std::map<object, std::vector<std::pair<object, route> > > noTolSystemMap;
 
-object minDistance(std::map<object, double>& dist, std::map<object, bool>& sptSet)
+object minValueCheck(std::map<object, double>& dist, std::map<object, bool>& sptSet)
 {
     // Initialize min value
     double min = std::numeric_limits<double>::max();
@@ -76,7 +76,7 @@ std::pair<double, std::map<object, object>> dijkstra_min_duration(std::map<objec
     {
 // Pick the minimum distance vertex from the set of vertices not
 // yet processed. u is always equal to start in the first iteration.
-        object u = minDistance(dist, sptSet);
+        object u = minValueCheck(dist, sptSet);
 
 // Mark the picked vertex as processed
         sptSet[u] = true;
@@ -132,7 +132,7 @@ std::pair<double, std::map<object, object>> dijkstra_min_crossroads(std::map<obj
     {
         // Pick the non crossroad vertex(if has one) from the set of vertices not
         // yet processed. u is always equal to start in the first iteration.
-        object u = minDistance(crossroads, sptSet);
+        object u = minValueCheck(crossroads, sptSet);
 
         // Mark the picked vertex as processed
         sptSet[u] = true;

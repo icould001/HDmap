@@ -13,13 +13,13 @@ class object
 {
     int x;
     int y;
-    object_type object_type;
+    object_type type;
 public:
-    object(int x, int y, enum object_type object_type) : x(x), y(y), object_type(object_type)
+    object(int x, int y, enum object_type object_type) : x(x), y(y), type(object_type)
     {
     }
 
-    object() : x(0), y(0), object_type(object_type::Invalid)
+    object() : x(0), y(0), type(object_type::Invalid)
     {
     }
 
@@ -67,7 +67,7 @@ public:
     {
         this->x = rhs.x;
         this->y = rhs.y;
-        this->object_type = rhs.object_type;
+        this->type = rhs.type;
         return *this;
     }
 };

@@ -36,7 +36,7 @@ void putInMap(const std::vector<std::pair<object, route>>& vector, const object&
 
 }
 
-void addRoute(const object& o1, const object& o2, route_type route_type, double duration)
+void addRoute(const object& o1, const object& o2, route_type road_type, double duration)
 {
     wholeMap.at(o1).push_back(std::pair<object, route>(o2,
                                                        route(o1.getX(),
@@ -45,9 +45,9 @@ void addRoute(const object& o1, const object& o2, route_type route_type, double 
                                                              o2.getX(),
                                                              o2.getY(),
                                                              o2.getObjectType(),
-                                                             route_type,
+                                                             road_type,
                                                              duration)));
-    if(route_type == route_type::Highway)
+    if(road_type == route_type::Highway)
     {
         highwayOnlyMap.at(o1).push_back(std::pair<object, route>(o2,
                                                                  route(o1.getX(),
@@ -56,7 +56,7 @@ void addRoute(const object& o1, const object& o2, route_type route_type, double 
                                                                        o2.getX(),
                                                                        o2.getY(),
                                                                        o2.getObjectType(),
-                                                                       route_type,
+                                                                       road_type,
                                                                        duration)));
     }
     if(o1.getObjectType() != object_type::Tol_system && o2.getObjectType() != object_type::Tol_system)
@@ -68,7 +68,7 @@ void addRoute(const object& o1, const object& o2, route_type route_type, double 
                                                                        o2.getX(),
                                                                        o2.getY(),
                                                                        o2.getObjectType(),
-                                                                       route_type,
+                                                                       road_type,
                                                                        duration)));
     }
 }
